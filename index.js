@@ -1,128 +1,77 @@
-const express = require('express');
-const body_parser = require('body-parser');
-const app = express();
+const express = require('express')
+const body_parser = require('body-parser')
+const db = require('./queries')
 const port = 8080;
+const app = express()
 
 app.use(express.json())
 app.use(body_parser.json());
+app.use(body_parser.urlencoded({ extended: false }))
 
-const students = [
-    {
-        studentId: 1,
-        firstName: 'joe',
-        lastName: 'smith',
-        grades: [
-            {
-                Year: 2019,
-                Semester: 'Spring',
-                GPA: 3.5
-            }, 
-            {
-                Year: 2019,
-                Semester: 'Fall',
-                GPA: 3.5
-            }
-        ]
-    },
-    {
-        studentId: 2,
-        firstName: 'jane',
-        lastName: 'smith',
-        grades: [
-            {
-                Year: 2019,
-                Semester: 'Spring',
-                GPA: 3.5
-            }, 
-            {
-                Year: 2019,
-                Semester: 'Fall',
-                GPA: 3.5
-            }
-        ]
-    },
-    {
-        studentId: 3,
-        firstName: 'bob',
-        lastName: 'smith',
-        grades: [
-            {
-                Year: 2019,
-                Semester: 'Spring',
-                GPA: 3.5
-            }, 
-            {
-                Year: 2019,
-                Semester: 'Fall',
-                GPA: 3.5
-            }
-        ]
-    }
-]
-
-const users = [
-    {
-        userName: 'notARealUserName',
-        email: 'notaRealEmailAddress@blah.com'
-    }
-]
+// const users = [
+//     {
+//         userName: 'notARealUserName',
+//         email: 'notaRealEmailAddress@blah.com'
+//     }
+// ]
 
 app.get('/', (req, res) => {
     res.send('Hello World');
 });
 
-// return a list of all students
-app.get('/students', (req, res) => {
-    let studentLastName = req.query.search;
-    let result = students;
+// returns a list of all students - if search query is specified, returns a list of all students filtered by last name instead
+app.get('/students', db.getAllStudents);
 
-    if (studentLastName) {
-        result = students.find(student => student.lastName === studentLastName)
-    }
-
-    res.send(result);
-});
-
-// return details of a specific student by student id
-app.get('/students/:studentId', (req, res) => {
-    const studentId = parseInt(req.params.studentId);
-    const student = students.find(student => student.studentId === studentId);
-
-    res.json(student);
-});
+// returns details of a specific student by student id
+app.get('/students/:studentId', db.getStudentByStudentId);
 
 // returns all grades for a given student by student id
-app.get('/students/:studentId/grades', (req, res) => {
-    const studentId = parseInt(req.params.studentId);
-    const student = students.find(student => student.studentId === studentId);
-    const grades = student.grades;
+app.get('/grades/:studentId', db.getGradesByStudentId);
 
-    res.json(grades);
-});
+// records a new grade, returns success status in JSON response and stores the new grade in the database
+app.post('/grades/:studentId', db.insertGradeForStudent);
 
-// record a new grade
-app.post('/grades', (req, res) => {
-    const grade = req.body;
-    if (!grade.studentId || typeof grade.grades == Array) {
-        res.status(422).send(() => {
-            return new Error('grade set must be associated with a student - please include a studentId in your request')
-        })
-    }
+//creates a new user, returns success status in JSON response and stores the new user in the database
+app.post('/register', db.registerUser);
 
-    res.status(201).json(grade)
-})
+// // return details of a specific student by student id
+// app.get('/students/:studentId', (req, res) => {
+//     const studentId = parseInt(req.params.studentId);
+//     const student = students.find(student => student.studentId === studentId);
 
-// create a new user
-app.post('/register', (req, res) => {
-    const user = req.body;
-    if (!user.userName || !user.email) {
-        res.status(422).send(() => {
-            return new Error('please specify BOTH the username and email for the user')
-        })
-    }
+//     res.json(student);
+// });
 
-    res.status(201).json(user)
-})
+// // returns all grades for a given student by student id
+// app.get('/students/:studentId/grades', (req, res) => {
+//     const studentId = parseInt(req.params.studentId);
+//     const student = students.find(student => student.studentId === studentId);
+//     const grades = student.grades;
+
+//     res.json(grades);
+// });
+
+// // record a new grade
+// app.post('/grades', (req, res) => {
+//     const grade = req.body;
+//     if (!grade.studentId || typeof grade.grades == Array) {
+//         res.status(422).send(() => {
+//             return new Error('grade set must be associated with a student - please include a studentId in your request')
+//         })getStudents
+//     res.status(201).json(grade)
+// })
+
+// // create a new user
+// app.post('/register', (req, res) => {
+//     const user = req.body;
+//     if (!user.userName || !user.email) {
+//         res.status(422).send(() => {
+//             return new Error('please specify BOTH the username and email for the user')
+//         })
+//     }
+
+//     res.status(201).json(user)
+// })
 
 app.listen(port)
 
